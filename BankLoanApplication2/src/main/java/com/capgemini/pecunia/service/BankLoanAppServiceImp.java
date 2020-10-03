@@ -4,7 +4,6 @@ import java.sql.Date;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Optional;
 import java.util.Random;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -42,13 +41,16 @@ public class BankLoanAppServiceImp implements BankLoanAppService {
 		// is thrown
 
 	public String loanRequest(LoanRequests loanreq) {
-		String s2 = loanreq.getAccountId();
-		System.out.println(s2);
-		System.out.println(loanreq);
-
+		String id = loanreq.getAccountId();
+		Account details = account.findOne(id);
+		if (details!=null) {
 			dao.save(loanreq);
 			return "Your Loan Request is successful";
+	} else {
 
+		 throw new BankAccountNotFound("No BankAccount found with " + loanreq.getAccountId()
+				+ "\n You need to have an Bank Account to applay Loan");
+	}
 
 	}
 
@@ -65,16 +67,13 @@ public class BankLoanAppServiceImp implements BankLoanAppService {
 	public List<LoanDisbursal> getApproveLoans(String accountId) {
 		LoanDisbursal disburse = new LoanDisbursal();
 		List<LoanRequests> request = dao.selectById(accountId);
-	System.out.println(request);
 		@SuppressWarnings("rawtypes")
 		Iterator itr = request.iterator();
 		while (itr.hasNext()) {
 			LoanRequests requests = (LoanRequests) itr.next();
-System.out.println(requests);
 			if (requests.getCreditScore() >= 670  && (!(disburseDao.exists(requests.getLoanId())))) {
 				disburse.setAccountId(requests.getAccountId());
 				disburse.setCreditScore(requests.getCreditScore());
-System.out.println("hello");
 
 				disburse.setLoanId(requests.getLoanId());
 				disburse.setLoanRoi(requests.getLoanRoi());
@@ -87,18 +86,12 @@ System.out.println("hello");
 				
 				disburse.setEmi(emi);
 				disburse.setLoanAmount(requests.getLoanAmount() + interest);
-				System.out.println(disburse);
-				System.out.println("working");
 				String accid=requests.getAccountId();
-				System.out.println(accid);
-				Account details = account.getOne(accid);
-				System.out.println("working");
-	     		System.out.println(requests.getLoanAmount() );
-	     		System.out.println(details);
+	      		Account details = account.getOne(accid);
 	     		Double damount=details.getAmount() + requests.getLoanAmount();
 				details.setAmount(damount);
 				
-				System.out.println(details.getAmount() );
+			
 					account.save(details);
 
 				transaction.setAccountId(requests.getAccountId());
@@ -149,7 +142,7 @@ disburse.setAccountId(requests.getAccountId());
 
 	}
 
-	// This method used to pay the one emi of apptoved loan requests
+	// This method used to pay the one emi of approved loan requests
 	// It takes the loan disbursal as the input and debits the emi and updates in
 	// the database
 	@Override

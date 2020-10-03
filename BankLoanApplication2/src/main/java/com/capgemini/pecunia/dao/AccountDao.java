@@ -10,10 +10,5 @@ import com.capgemini.pecunia.entity.Account;
 public interface AccountDao extends JpaRepository<Account, String> {
 	@Query("select det from Account det where accountId=?1")
 	Account selectById(@Param("c") String s1);
-
-	@Query("select e from Account e where e.accountId=?1")
-	Account findO(@Param("c") String s2);
 	
-	@Query("from Account where accountId=:accountId")
-	Account selectById1(String accountId);
 }
